@@ -2,7 +2,6 @@ import NextAuth, { DefaultSession } from "next-auth";
 import authConfig from "./auth.config";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { db } from "./lib/db";
-import { getUserById } from "./data/user";
 
 declare module "next-auth" {
   /**
@@ -35,80 +34,33 @@ declare module "next-auth/jwt" {
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
   callbacks: {
-    // async signIn({user}){
-    //   const existingUser = await getUserById(user.id)
+    async signIn({ user }) {
+      const allowedEmail = process.env.AUTH_GOOGLE_MAIL;
 
-    //   if(!existingUser || !existingUser.emailVerified){
-        
-    //     return false
-    //   }
-    //   return true
-    // },
-    // async signIn({ user, account, profile, email }) {
-    //   if (!user.email) return false
+      if (!allowedEmail) return false;
 
-    //   // Cari user berdasarkan email
-    //   const existingUser = await db.user.findUnique({
-    //     where: { email: user.email },
-    //   })
-
-    //   if (existingUser) {
-    //     // Kalau ada user dengan email yang sama, pastikan account OAuth terhubung
-    //     const existingAccount = await db.account.findFirst({
-    //       where: {
-    //         provider: account?.provider,
-    //         providerAccountId: account?.providerAccountId,
-    //         userId: existingUser.id,
-    //       },
-    //     })
-
-    //     if (!existingAccount && account) {
-    //       await db.account.create({
-    //         data: {
-    //           userId: existingUser.id,
-    //           type: account.type,
-    //           provider: account.provider,
-    //           providerAccountId: account.providerAccountId,
-    //           access_token: account.access_token,
-    //           refresh_token: account.refresh_token,
-    //           expires_at: account.expires_at,
-    //           token_type: account.token_type,
-    //           scope: account.scope,
-    //           id_token: account.id_token,
-    //           session_state: account.session_state?.toString(),
-    //         },
-    //       })
-    //     }
-    //     return true
-    //   }
-
-    //   // Kalau user baru, Auth.js + PrismaAdapter otomatis bikin user & account
-    //   return true
-    // },
-    async session({ token, session }) {
-      if (token.sub && session.user) {
-        session.user.id = token.sub;
+      // hanya email yang diizinkan
+      if (user.email !== allowedEmail) {
+        return false;
       }
 
-      if (token.role && session.user) {
-        session.user.role = token.role;
-      }
-      return session;
+      return true;
     },
-    async jwt({ token }) {
-      // console.log(token)
-      if (!token.sub) return token;
 
-      const existingUser = await getUserById(token.sub);
-
-      if (!existingUser) return token;
-
-      token.role = existingUser.role;
-      return token;
+    async session({ session, user }) {
+      // console.log(session);
+      // session.user.name = user.name;
+      // session.user.email = user.email;
+      // session.user.image = user.image;
+      return session;
     },
   },
   session: {
     strategy: "jwt",
+  },
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/login",
   },
   ...authConfig,
 });
