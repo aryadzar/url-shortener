@@ -4,9 +4,7 @@
  * @type{string[]}
  */
 
-export const publicRoutes = [
-    "/"
-]
+export const publicRoutes = ["/:key/detail"];
 
 /**
  * An Array of routes that are use for authentication
@@ -14,11 +12,8 @@ export const publicRoutes = [
  * @type{string[]}
  */
 
-export const authRoutes = [
-    '/auth/login',
-    '/auth/register',
-]
+export const authRoutes = ["/auth/login", "/auth/register"];
 
-export const apiAuthPrefix = '/api/auth'
+export const apiAuthPrefix = "/api/auth";
 
-export const DEFAULT_LOGIN_REDIRECT= "/dashboard"
+export const DEFAULT_LOGIN_REDIRECT = "/dashboard";

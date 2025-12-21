@@ -1,27 +1,14 @@
 "use client";
 
 import { Button } from "../ui/button";
-import { useForm } from "react-hook-form";
-import { LoginForm, loginUserSchemeForm } from "@/validations/auth-validation";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { login } from "@/actions/login";
-import { INITIAL_STATE_LOGIN_FORM } from "@/constants/register-constant";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
-import { AuthError } from "next-auth";
 import { useSearchParams } from "next/navigation";
 
 export default function LoginFormView() {
-  const form = useForm<LoginForm>({
-    resolver: zodResolver(loginUserSchemeForm),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
   async function handleLogin(provider: string) {
     try {
@@ -34,10 +21,6 @@ export default function LoginFormView() {
       setLoadingProvider(null);
     }
   }
-  const [loginState, loginAction, isPendingLoginAction] = useActionState(
-    login,
-    INITIAL_STATE_LOGIN_FORM
-  );
 
   const searchParams = useSearchParams();
 
@@ -55,81 +38,45 @@ export default function LoginFormView() {
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    if (loginState?.status === "error") {
-      toast.error("Error login User", {
-        description: loginState?.errors?.description,
-      });
-    }
-
-    if (loginState?.status === "success") {
-      toast.success("Success login user");
-      form.reset();
-    }
-  }, [loginState]);
   return (
     <div className="flex flex-col space-y-6 w-[350px]">
       <div className="text-center text-xl font-semibold">Login Page</div>
-
-      {/* === Email & Password Login === */}
-
-      {/* === Divider === */}
-      <div className="flex items-center">
-        <div className="flex-grow h-px bg-gray-300" />
-        <span className="px-2 text-sm text-gray-500">atau</span>
-        <div className="flex-grow h-px bg-gray-300" />
-      </div>
-
       {/* === Oauth Buttons === */}
       <div className="flex flex-col space-y-3">
         <Button
           variant="outline"
-          className="cursor-pointer"
+          className="cursor-pointer flex items-center gap-2"
           disabled={loadingProvider === "google"}
           onClick={() => handleLogin("google")}
         >
           {loadingProvider === "google" ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : null}
-          <svg
-            width="500px"
-            height="500px"
-            viewBox="-165.06 -165.06 592.12 592.12"
-            xmlns="http://www.w3.org/2000/svg"
-            preserveAspectRatio="xMidYMid"
-            fill="#000000"
-            transform="matrix(1, 0, 0, 1, 0, 0)"
-            stroke="#000000"
-            stroke-width="2.096"
-          >
-            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-            <g
-              id="SVGRepo_tracerCarrier"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke="#CCCCCC"
-              stroke-width="1.5719999999999998"
-            ></g>
-            <g id="SVGRepo_iconCarrier">
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 48 48"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <path
-                d="M255.878 133.451c0-10.734-.871-18.567-2.756-26.69H130.55v48.448h71.947c-1.45 12.04-9.283 30.172-26.69 42.356l-.244 1.622 38.755 30.023 2.685.268c24.659-22.774 38.875-56.282 38.875-96.027"
-                fill="#000000"
-              ></path>
+                fill="#EA4335"
+                d="M24 9.5c3.2 0 5.4 1.4 6.6 2.5l4.9-4.9C32.6 4.3 28.7 2.5 24 2.5 14.9 2.5 7.1 8.1 3.9 16.1l5.8 4.5C11.2 14.4 17.1 9.5 24 9.5z"
+              />
               <path
-                d="M130.55 261.1c35.248 0 64.839-11.605 86.453-31.622l-41.196-31.913c-11.024 7.688-25.82 13.055-45.257 13.055-34.523 0-63.824-22.773-74.269-54.25l-1.531.13-40.298 31.187-.527 1.465C35.393 231.798 79.49 261.1 130.55 261.1"
-                fill="#000000"
-              ></path>
+                fill="#4285F4"
+                d="M46.5 24.5c0-1.6-.1-2.8-.4-4H24v7.6h12.7c-.5 2.8-2.4 6.9-6.7 9.7l5.2 4C40.2 37.2 46.5 31.8 46.5 24.5z"
+              />
               <path
-                d="M56.281 156.37c-2.756-8.123-4.351-16.827-4.351-25.82 0-8.994 1.595-17.697 4.206-25.82l-.073-1.73L15.26 71.312l-1.335.635C5.077 89.644 0 109.517 0 130.55s5.077 40.905 13.925 58.602l42.356-32.782"
-                fill="#000000"
-              ></path>
+                fill="#FBBC05"
+                d="M9.7 28.6c-.4-1.1-.6-2.3-.6-3.6s.2-2.5.6-3.6l-5.8-4.5C2.4 19.7 1.5 22.7 1.5 25s.9 5.3 2.4 7.6l5.8-4z"
+              />
               <path
-                d="M130.55 50.479c24.514 0 41.05 10.589 50.479 19.438l36.844-35.974C195.245 12.91 165.798 0 130.55 0 79.49 0 35.393 29.301 13.925 71.947l42.211 32.783c10.59-31.477 39.891-54.251 74.414-54.251"
-                fill="#000000"
-              ></path>
-            </g>
-          </svg>
-          Login with Google
+                fill="#34A853"
+                d="M24 46.5c6.5 0 12-2.1 16-5.7l-5.2-4c-2.8 1.9-6.5 3.2-10.8 3.2-6.9 0-12.8-4.9-14.9-11.4l-5.8 4C7.1 40.4 14.9 46.5 24 46.5z"
+              />
+            </svg>
+          )}
+          <span>Login with Google</span>
         </Button>
       </div>
     </div>

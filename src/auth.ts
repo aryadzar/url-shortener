@@ -47,12 +47,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return true;
     },
 
-    async session({ session, user }) {
-      // console.log(session);
-      // session.user.name = user.name;
-      // session.user.email = user.email;
-      // session.user.image = user.image;
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.sub as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
+        session.user.image = token.picture as string;
+      }
       return session;
+    },
+
+    async jwt({ token }) {
+      return token;
     },
   },
   session: {
