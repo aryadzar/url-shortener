@@ -1,5 +1,6 @@
 import { getLinkAndLogClick } from "@/actions/links";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
+import RedirectPage from "./redirect-page";
 
 type Props = {
   params: {
@@ -20,5 +21,5 @@ export default async function KeyPage({ params }: Props) {
     return notFound();
   }
 
-  return redirect(link.url);
+  return <RedirectPage url={link.url} />;
 }
