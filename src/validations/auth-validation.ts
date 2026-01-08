@@ -31,18 +31,23 @@ export const createLinkSchemeForm = z.object({
       (val) => !val || /^[a-zA-Z0-9_-]+$/.test(val),
       "Key can only contain alphanumeric characters, hyphens, and underscores."
     ),
+  utm_source: z.string().optional(),
+  utm_medium: z.string().optional(),
+  utm_campaign: z.string().optional(),
+  utm_term: z.string().optional(),
+  utm_content: z.string().optional(),
 });
 
 export const updateLinkSchemeForm = z.object({
-
   id: z.string().min(1),
-
   url: z.string().url().optional(),
-
   title: z.string().optional(),
-
   description: z.string().optional(),
-
+  utm_source: z.string().optional(),
+  utm_medium: z.string().optional(),
+  utm_campaign: z.string().optional(),
+  utm_term: z.string().optional(),
+  utm_content: z.string().optional(),
 });
 
 

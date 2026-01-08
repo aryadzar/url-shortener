@@ -28,6 +28,7 @@ import { updateLinkSchemeForm } from "@/validations/auth-validation";
 import { updateLink } from "@/actions/links";
 import { useState, useTransition } from "react";
 import { Link as PrismaLink } from "@prisma/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 type FormEditLinkProps = {
   link: PrismaLink;
@@ -35,26 +36,75 @@ type FormEditLinkProps = {
 };
 
 export function FormEditLink({ link, children }: FormEditLinkProps) {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // Parse original URL to separate base URL and UTM params
+  const urlObject = new URL(link.url);
+  const utmParams = {
+    utm_source: urlObject.searchParams.get("utm_source") || "",
+    utm_medium: urlObject.searchParams.get("utm_medium") || "",
+    utm_campaign: urlObject.searchParams.get("utm_campaign") || "",
+    utm_term: urlObject.searchParams.get("utm_term") || "",
+    utm_content: urlObject.searchParams.get("utm_content") || "",
+  };
+
+  // Remove UTM params from the display URL
+  Object.keys(utmParams).forEach((key) => {
+    urlObject.searchParams.delete(key);
+  });
+  const baseUrl = urlObject.toString();
+
   const form = useForm<z.infer<typeof updateLinkSchemeForm>>({
     resolver: zodResolver(updateLinkSchemeForm),
     defaultValues: {
       id: link.id,
-      url: link.url,
+      url: baseUrl,
       title: link.title || "",
       description: link.description || "",
+      ...utmParams,
     },
   });
 
   async function onSubmit(values: z.infer<typeof updateLinkSchemeForm>) {
     startTransition(async () => {
-      const result = await updateLink(values);
-      if (result.success) {
-        toast.success(result.success);
-        setOpen(false);
-      } else if (result.error) {
-        toast.error(result.error);
+      try {
+        const newUrlObject = new URL(values.url!);
+        const utmKeys: (keyof typeof values)[] = [
+          "utm_source",
+          "utm_medium",
+          "utm_campaign",
+          "utm_term",
+          "utm_content",
+        ];
+
+        // Clear any existing UTM params from the base URL field
+        utmKeys.forEach((key) => {
+          newUrlObject.searchParams.delete(key);
+        });
+
+        // Add new UTM params from the form
+        utmKeys.forEach((param) => {
+          if (values[param]) {
+            newUrlObject.searchParams.set(param, values[param]!);
+          }
+        });
+
+        const finalUrl = newUrlObject.toString();
+        const result = await updateLink({ ...values, url: finalUrl });
+
+        if (result.success) {
+          await queryClient.invalidateQueries({
+            queryKey: ["links"],
+          });
+          setOpen(false);
+          toast.success(result.success);
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        toast.error("Invalid URL provided.");
       }
     });
   }
@@ -122,6 +172,98 @@ export function FormEditLink({ link, children }: FormEditLinkProps) {
                 </FormItem>
               )}
             />
+            <fieldset className="border p-4 rounded-md">
+              <legend className="text-sm font-medium px-1">
+                UTM Builder (Optional)
+              </legend>
+              <div className="space-y-4 pt-2">
+                <FormField
+                  control={form.control}
+                  name="utm_source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Source</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., google"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_medium"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Medium</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., cpc"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_campaign"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Campaign</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., summer_sale"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_term"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Term</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., running+shoes"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Content</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., logolink"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </fieldset>
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="secondary">

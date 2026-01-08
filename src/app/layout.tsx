@@ -4,6 +4,7 @@ import "./globals.css";
 import ReactQueryProvider from "@/provider/react-query-provider";
 import { ThemeProvider } from "@/provider/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -22,6 +23,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          async
+          defer
+        />
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

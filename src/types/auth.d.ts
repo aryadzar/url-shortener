@@ -1,7 +1,7 @@
 import { Prisma } from "@prisma/client";
 
 const linkWithClicks = Prisma.validator<Prisma.LinkDefaultArgs>()({
-  include: { clicks: true },
+  include: { _count: { select: { clicks: true } } },
 });
 
 export type TLink = Prisma.LinkGetPayload<typeof linkWithClicks>;

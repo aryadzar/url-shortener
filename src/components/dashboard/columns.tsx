@@ -6,6 +6,7 @@ import { TLink } from "@/types/auth";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { deleteLink } from "@/actions/links";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { FormEditLink } from "../auth/form-edit-link";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 function copyToClipboard(text: string, message: string) {
   navigator.clipboard.writeText(text).then(() => {
@@ -37,8 +39,9 @@ function copyToClipboard(text: string, message: string) {
 }
 
 const ActionsCell = ({ link }: { link: TLink }) => {
+  const queryClient = useQueryClient();
   const [isPending, startTransition] = useTransition();
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = getBaseUrl();
   const shortUrl = `${baseUrl}/${link.key}`;
 
   const handleDelete = () => {
@@ -46,6 +49,9 @@ const ActionsCell = ({ link }: { link: TLink }) => {
       deleteLink(link.id).then((res) => {
         if (res.success) {
           toast.success(res.success);
+          queryClient.invalidateQueries({
+            queryKey: ["links"],
+          });
         } else if (res.error) {
           toast.error(res.error);
         }
@@ -117,8 +123,7 @@ export const columns: ColumnDef<TLink>[] = [
     header: "Short Link",
     cell: ({ row }) => {
       const link = row.original;
-      const baseUrl =
-        process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+      const baseUrl = getBaseUrl();
       const shortUrl = `${baseUrl}/${link.key}`;
       return (
         <Button
@@ -156,7 +161,7 @@ export const columns: ColumnDef<TLink>[] = [
     accessorKey: "clicks",
     header: "Clicks",
     cell: ({ row }) => {
-      return row.original.clicks.length;
+      return row.original._count.clicks;
     },
   },
   {

@@ -28,8 +28,10 @@ import { createLinkSchemeForm } from "@/validations/auth-validation";
 import { createLink } from "@/actions/links";
 import { useState, useTransition } from "react";
 import { nanoid } from "nanoid";
+import { useQueryClient } from "@tanstack/react-query";
 
-export function FormCreateLink({ refetch }: { refetch: () => void }) {
+export function FormCreateLink() {
+  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof createLinkSchemeForm>>({
@@ -39,19 +41,45 @@ export function FormCreateLink({ refetch }: { refetch: () => void }) {
       title: "",
       description: "",
       key: "",
+      utm_source: "",
+      utm_medium: "",
+      utm_campaign: "",
+      utm_term: "",
+      utm_content: "",
     },
   });
 
   async function onSubmit(values: z.infer<typeof createLinkSchemeForm>) {
     startTransition(async () => {
-      const result = await createLink(values);
-      if (result.success) {
-        toast.success(result.success);
-        setOpen(false);
-        refetch();
-        form.reset();
-      } else if (result.error) {
-        toast.error(result.error);
+      try {
+        const urlObject = new URL(values.url);
+        const utmParams: (keyof typeof values)[] = [
+          "utm_source",
+          "utm_medium",
+          "utm_campaign",
+          "utm_term",
+          "utm_content",
+        ];
+
+        utmParams.forEach((param) => {
+          if (values[param]) {
+            urlObject.searchParams.set(param, values[param]!);
+          }
+        });
+
+        const finalUrl = urlObject.toString();
+        const result = await createLink({ ...values, url: finalUrl });
+
+        if (result.success) {
+          toast.success(result.success);
+          setOpen(false);
+          await queryClient.invalidateQueries({ queryKey: ["links"] });
+          form.reset();
+        } else if (result.error) {
+          toast.error(result.error);
+        }
+      } catch (error) {
+        toast.error("Invalid URL provided.");
       }
     });
   }
@@ -148,6 +176,98 @@ export function FormCreateLink({ refetch }: { refetch: () => void }) {
                 </FormItem>
               )}
             />
+            <fieldset className="border p-4 rounded-md">
+              <legend className="text-sm font-medium px-1">
+                UTM Builder (Optional)
+              </legend>
+              <div className="space-y-4 pt-2">
+                <FormField
+                  control={form.control}
+                  name="utm_source"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Source</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., google"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_medium"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Medium</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., cpc"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_campaign"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Campaign</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., summer_sale"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_term"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Term</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., running+shoes"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="utm_content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>UTM Content</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., logolink"
+                          {...field}
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </fieldset>
             <DialogFooter>
               <DialogClose asChild>
                 <Button type="button" variant="secondary">

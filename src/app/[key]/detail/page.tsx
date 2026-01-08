@@ -17,6 +17,7 @@ import {
 import { notFound } from "next/navigation";
 import { CopyButton, QrCodeClient } from "./client";
 import { Metadata } from "next";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 type Props = {
   params: {
@@ -49,10 +50,8 @@ export default async function LinkDetailPage({ params }: Props) {
     return notFound();
   }
 
-  const shortUrl = `${
-    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"
-  }/${link.key}`;
-
+  const shortUrl = `${getBaseUrl()}/${link.key}`;
+  console.log(shortUrl);
   // Aggregate click data
   const clicksByCountry = link.clicks.reduce((acc, click) => {
     const country = click.country || "Unknown";

@@ -15,9 +15,11 @@ import { UAParser } from "ua-parser-js";
 export async function getLinks({
   page,
   pageSize,
+  q,
 }: {
   page: number;
   pageSize: number;
+  q: string;
 }) {
   const session = await auth();
 
@@ -30,21 +32,37 @@ export async function getLinks({
 
   const offset = (page - 1) * pageSize;
 
+  const where = {
+    userId: session.user.id,
+    OR: [
+      {
+        key: {
+          contains: q,
+        },
+      },
+      {
+        url: {
+          contains: q,
+        },
+      },
+    ],
+  };
+
   const [links, total] = await db.$transaction([
     db.link.findMany({
-      where: {
-        userId: session.user.id,
-      },
+      where,
       include: {
-        clicks: true,
+        _count: {
+          select: {
+            clicks: true,
+          },
+        },
       },
       skip: offset,
       take: pageSize,
     }),
     db.link.count({
-      where: {
-        userId: session.user.id,
-      },
+      where,
     }),
   ]);
 
