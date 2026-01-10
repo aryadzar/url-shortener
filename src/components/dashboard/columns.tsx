@@ -1,12 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useState } from "react";
 import Link from "next/link";
 import { TLink } from "@/types/auth";
 import { ColumnDef } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { QRCodeSVG } from "qrcode.react";
 
 import { deleteLink } from "@/actions/links";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { FormEditLink } from "../auth/form-edit-link";
 import { getBaseUrl } from "@/lib/getBaseUrl";
 
@@ -37,6 +44,66 @@ function copyToClipboard(text: string, message: string) {
     toast.success(message);
   });
 }
+
+// Reusable QRCode component with proportional logo
+const QRCodeWithLogo = ({ value, size }: { value: string; size: number }) => {
+  const logoSize = Math.floor(size * 0.2); // 20% of QR code size for better scannability
+
+  return (
+    <QRCodeSVG
+      value={value}
+      size={size}
+      imageSettings={{
+        src: "/scara.png",
+        x: undefined,
+        y: undefined,
+        height: logoSize,
+        width: logoSize,
+        opacity: 1,
+        excavate: true,
+      }}
+    />
+  );
+};
+
+const BarcodeCell = ({ link }: { link: TLink }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const baseUrl = getBaseUrl();
+  const shortUrl = `${baseUrl}/${link.key}`;
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="cursor-pointer hover:opacity-80 transition-opacity"
+      >
+        <QRCodeWithLogo value={shortUrl} size={50} />
+      </button>
+
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>QR Code Preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="p-4 bg-white rounded-md">
+              <QRCodeWithLogo value={shortUrl} size={300} />
+            </div>
+            <p className="text-sm text-muted-foreground text-center">
+              {shortUrl}
+            </p>
+            <Button
+              onClick={() => copyToClipboard(shortUrl, "Short link copied!")}
+              variant="outline"
+            >
+              Copy Link
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
 const ActionsCell = ({ link }: { link: TLink }) => {
   const queryClient = useQueryClient();
@@ -134,6 +201,11 @@ export const columns: ColumnDef<TLink>[] = [
         </Button>
       );
     },
+  },
+  {
+    id: "barcode",
+    header: "QR Code",
+    cell: ({ row }) => <BarcodeCell link={row.original} />,
   },
   {
     accessorKey: "url",
