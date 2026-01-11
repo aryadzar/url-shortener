@@ -23,7 +23,15 @@ const Sidebar = () => {
               pathname === "/dashboard" ? "bg-muted text-primary" : ""
             }`}
           >
-            Dashboard
+            Links
+          </Link>
+          <Link
+            href="/analytics"
+            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary ${
+              pathname === "/analytics" ? "bg-muted text-primary" : ""
+            }`}
+          >
+            Analytics
           </Link>
           {/* <Link
             href="/settings"
