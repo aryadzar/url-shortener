@@ -147,7 +147,17 @@ export async function createLink(values: z.infer<typeof createLinkSchemeForm>) {
     };
   }
 
-  const { url, title, description, key } = validatedFields.data;
+  const {
+    url,
+    title,
+    description,
+    key,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    utm_term,
+    utm_content,
+  } = validatedFields.data;
 
   let finalKey = key;
 
@@ -164,10 +174,19 @@ export async function createLink(values: z.infer<typeof createLinkSchemeForm>) {
     finalKey = nanoid(7);
   }
 
+  // Build URL with UTM parameters if provided
+  const urlObj = new URL(url);
+  if (utm_source) urlObj.searchParams.set("utm_source", utm_source);
+  if (utm_medium) urlObj.searchParams.set("utm_medium", utm_medium);
+  if (utm_campaign) urlObj.searchParams.set("utm_campaign", utm_campaign);
+  if (utm_term) urlObj.searchParams.set("utm_term", utm_term);
+  if (utm_content) urlObj.searchParams.set("utm_content", utm_content);
+  const finalUrl = urlObj.toString();
+
   try {
     await db.link.create({
       data: {
-        url,
+        url: finalUrl,
         title,
         description,
         key: finalKey!,
@@ -253,14 +272,23 @@ export async function updateLink(values: z.infer<typeof updateLinkSchemeForm>) {
   }
 
   const validatedFields = updateLinkSchemeForm.safeParse(values);
-
   if (!validatedFields.success) {
     return {
       error: "Invalid fields",
     };
   }
 
-  const { id, ...data } = validatedFields.data;
+  const {
+    id,
+    url,
+    title,
+    description,
+    utm_source,
+    utm_medium,
+    utm_campaign,
+    utm_term,
+    utm_content,
+  } = validatedFields.data;
 
   try {
     const link = await db.link.findUnique({
@@ -281,11 +309,27 @@ export async function updateLink(values: z.infer<typeof updateLinkSchemeForm>) {
       };
     }
 
+    // Build URL with UTM parameters if provided
+    let finalUrl = url;
+    if (url) {
+      const urlObj = new URL(url);
+      if (utm_source) urlObj.searchParams.set("utm_source", utm_source);
+      if (utm_medium) urlObj.searchParams.set("utm_medium", utm_medium);
+      if (utm_campaign) urlObj.searchParams.set("utm_campaign", utm_campaign);
+      if (utm_term) urlObj.searchParams.set("utm_term", utm_term);
+      if (utm_content) urlObj.searchParams.set("utm_content", utm_content);
+      finalUrl = urlObj.toString();
+    }
+
     await db.link.update({
       where: {
         id,
       },
-      data,
+      data: {
+        ...(finalUrl !== undefined && { url: finalUrl }),
+        ...(title !== undefined && { title }),
+        ...(description !== undefined && { description }),
+      },
     });
 
     revalidatePath("/dashboard");
