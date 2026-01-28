@@ -14,8 +14,16 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   const isRootRoute = nextUrl.pathname === "/";
-  if (isLoggedIn && isRootRoute) {
-    return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+
+  // Redirect root to configured domain
+  if (isRootRoute) {
+    const redirectDomain = process.env.ROOT_REDIRECT_DOMAIN;
+    if (redirectDomain) {
+      return Response.redirect(new URL(redirectDomain));
+    }
+    if (isLoggedIn) {
+      return Response.redirect(new URL(DEFAULT_LOGIN_REDIRECT, nextUrl));
+    }
   }
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
@@ -24,8 +32,8 @@ export default auth((req) => {
   // Improved public route check
   const isStaticPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isDynamicDetailRoute = /^\/[^/]+\/detail$/.test(nextUrl.pathname);
-  // Matches short URLs like /aBcDeF1 - assuming 7 characters from nanoid
-  const isShortUrlRoute = /^\/[-\w]{7}$/.test(nextUrl.pathname);
+  // Matches short URLs - minimum 3 characters, supports custom keys like tutorial-vclass
+  const isShortUrlRoute = /^\/[-\w]{3,}$/.test(nextUrl.pathname);
 
   const isPublicRoute =
     isStaticPublicRoute || isDynamicDetailRoute || isShortUrlRoute;

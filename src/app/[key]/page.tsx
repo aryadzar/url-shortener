@@ -1,4 +1,4 @@
-import { getLinkAndLogClick } from "@/actions/links";
+import { getLinkAndLogClick, getLinkByKey } from "@/actions/links";
 import { notFound } from "next/navigation";
 import RedirectPage from "./redirect-page";
 
@@ -15,11 +15,11 @@ export default async function KeyPage({ params }: Props) {
     return notFound();
   }
 
-  const link = await getLinkAndLogClick(key);
+  const link = await getLinkByKey(key);
 
   if (!link) {
     return notFound();
   }
 
-  return <RedirectPage url={link.url} />;
+  return <RedirectPage keyProp={key} targetUrl={link.url} />;
 }

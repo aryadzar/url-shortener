@@ -72,6 +72,15 @@ export async function getLinks({
   };
 }
 
+// Get link without logging click
+export async function getLinkByKey(key: string) {
+  const link = await db.link.findUnique({
+    where: { key },
+  });
+
+  return link;
+}
+
 // ... other code
 
 export async function getLinkAndLogClick(key: string) {
