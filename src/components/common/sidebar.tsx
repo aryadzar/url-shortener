@@ -45,7 +45,7 @@ const Sidebar = () => {
       </div>
       <div className="mt-auto p-4">
         <Button
-          onClick={() => signOut({ callbackUrl: DEFAULT_LOGIN_REDIRECT })}
+          onClick={() => signOut({ callbackUrl: "/auth/login" })}
           variant="ghost"
           className="w-full justify-start"
         >

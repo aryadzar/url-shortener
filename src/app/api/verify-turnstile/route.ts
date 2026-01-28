@@ -1,4 +1,4 @@
-import { getLinkAndLogClick } from "@/actions/links";
+import { getLinkByKey } from "@/actions/links";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Bot detected" }, { status: 403 });
   }
 
-  const link = await getLinkAndLogClick(key);
+  const link = await getLinkByKey(key);
 
   if (!link) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
