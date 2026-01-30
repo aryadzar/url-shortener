@@ -18,6 +18,7 @@ import { notFound } from "next/navigation";
 import { CopyButton, QrCodeClient } from "./client";
 import { Metadata } from "next";
 import { getBaseUrl } from "@/lib/getBaseUrl";
+import Link from "next/link";
 
 type Props = {
   params: {
@@ -26,7 +27,7 @@ type Props = {
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { key } = await params; // ✅ BENAR
+  const { key } = await params;
   const link = await getLinkDetails(key);
 
   if (!link) {
@@ -51,7 +52,7 @@ export default async function LinkDetailPage({ params }: Props) {
   }
 
   const shortUrl = `${getBaseUrl()}/${link.key}`;
-  console.log(shortUrl);
+
   // Aggregate click data
   const clicksByCountry = link.clicks.reduce((acc, click) => {
     const country = click.country || "Unknown";
@@ -76,9 +77,9 @@ export default async function LinkDetailPage({ params }: Props) {
   return (
     <div className="container mx-auto py-10 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Link Analytics</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Link Details</h1>
         <p className="text-muted-foreground">
-          Detailed statistics for your short link.
+          Detailed information for your short link.
         </p>
       </div>
 
@@ -130,6 +131,7 @@ export default async function LinkDetailPage({ params }: Props) {
           <Card>
             <CardHeader>
               <CardTitle>Total Clicks</CardTitle>
+              <CardDescription>All time clicks</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-4xl font-bold">{link.clicks.length}</p>
@@ -142,12 +144,16 @@ export default async function LinkDetailPage({ params }: Props) {
                 <CardTitle>Clicks by Country</CardTitle>
               </CardHeader>
               <CardContent>
-                {Object.entries(clicksByCountry).map(([country, count]) => (
-                  <div key={country} className="flex justify-between">
-                    <span>{country}</span>
-                    <strong>{count}</strong>
-                  </div>
-                ))}
+                {Object.entries(clicksByCountry).length > 0 ? (
+                  Object.entries(clicksByCountry).map(([country, count]) => (
+                    <div key={country} className="flex justify-between">
+                      <span>{country}</span>
+                      <strong>{count}</strong>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No data yet</p>
+                )}
               </CardContent>
             </Card>
             <Card>
@@ -155,12 +161,16 @@ export default async function LinkDetailPage({ params }: Props) {
                 <CardTitle>Clicks by Browser</CardTitle>
               </CardHeader>
               <CardContent>
-                {Object.entries(clicksByBrowser).map(([browser, count]) => (
-                  <div key={browser} className="flex justify-between">
-                    <span>{browser}</span>
-                    <strong>{count}</strong>
-                  </div>
-                ))}
+                {Object.entries(clicksByBrowser).length > 0 ? (
+                  Object.entries(clicksByBrowser).map(([browser, count]) => (
+                    <div key={browser} className="flex justify-between">
+                      <span>{browser}</span>
+                      <strong>{count}</strong>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No data yet</p>
+                )}
               </CardContent>
             </Card>
             <Card>
@@ -168,12 +178,16 @@ export default async function LinkDetailPage({ params }: Props) {
                 <CardTitle>Clicks by OS</CardTitle>
               </CardHeader>
               <CardContent>
-                {Object.entries(clicksByOS).map(([os, count]) => (
-                  <div key={os} className="flex justify-between">
-                    <span>{os}</span>
-                    <strong>{count}</strong>
-                  </div>
-                ))}
+                {Object.entries(clicksByOS).length > 0 ? (
+                  Object.entries(clicksByOS).map(([os, count]) => (
+                    <div key={os} className="flex justify-between">
+                      <span>{os}</span>
+                      <strong>{count}</strong>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No data yet</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -220,6 +234,23 @@ export default async function LinkDetailPage({ params }: Props) {
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>View Detailed Analytics</CardTitle>
+          <CardDescription>
+            See charts and detailed analytics for this link
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Link
+            href={`/analytics/${link.key}`}
+            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+          >
+            View Analytics
+          </Link>
         </CardContent>
       </Card>
     </div>

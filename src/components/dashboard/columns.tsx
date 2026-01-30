@@ -156,6 +156,9 @@ const ActionsCell = ({ link }: { link: TLink }) => {
           <Link href={`/${link.key}/detail`}>
             <DropdownMenuItem>View details</DropdownMenuItem>
           </Link>
+          <Link href={`/analytics/${link.key}`}>
+            <DropdownMenuItem>View analytics</DropdownMenuItem>
+          </Link>
           <AlertDialogTrigger asChild>
             <DropdownMenuItem
               className="text-red-500"

@@ -60,6 +60,8 @@ export function DateRangePicker({
             selected={dateRange}
             onSelect={onDateRangeChange}
             numberOfMonths={2}
+            disabled={undefined}
+            captionLayout="dropdown-buttons"
           />
         </PopoverContent>
       </Popover>
